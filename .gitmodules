@@ -1,25 +1,25 @@
 [submodule "sitebase"]
     path = sitebase
     url = https://github.com/thanawatkate/sitebase.git
-    branch = main
+   
 
 [submodule "ktdevelop_web"]
     path = ktdevelop_web
     url = https://github.com/thanawatkate/ktdevelop_web.git
-    branch = main
+ 
 	
 [submodule "cookie-banner"]
 	path = cookie-banner
 	url = https://github.com/thanawatkate/cookie-banner-system.git
-    branch = main
+    
 
 # [submodule "saccmproject"]
 #     path = saccmproject
 #     url = https://github.com/thanawatkate/saccmproject.git
-#     branch = main   
+#  
 
 [submodule "aihubproject"]
     path = aihubproject
     url = https://github.com/thanawatkate/aihubproject.git
-    branch = main   
+    
  
