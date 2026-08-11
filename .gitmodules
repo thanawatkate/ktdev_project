@@ -13,10 +13,10 @@
 	url = https://github.com/thanawatkate/cookie-banner-system.git
     
 
-# [submodule "saccmproject"]
-#     path = saccmproject
-#     url = https://github.com/thanawatkate/saccmproject.git
-#  
+ [submodule "saccmproject"]
+     path = saccmproject
+     url = https://github.com/thanawatkate/saccmproject.git
+  
 
 [submodule "aihubproject"]
     path = aihubproject
