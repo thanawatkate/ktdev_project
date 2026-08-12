@@ -22,4 +22,6 @@
     path = aihubproject
     url = https://github.com/thanawatkate/aihubproject.git
     
- 
+[submodule "SimTally"]
+	path = SimTally
+	url = https://github.com/thanawatkate/SimTally-By-KTdev.git
