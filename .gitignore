@@ -1,0 +1,9 @@
+# Local clones no longer registered in .gitmodules — keep on disk, do not track.
+/SimTally/
+/cookie-banner/
+/ktdevelop_web/
+/saccmproject/
+/sitebase/
+
+.sync-backup/
+.sync-submodules.lock
