@@ -1,30 +1,30 @@
 [submodule "sitebase"]
     path = sitebase
-    url = https://github.com/thanawatkate/sitebase.git
+    url = git@github.com:thanawatkate/sitebase.git
    
 
 [submodule "ktdevelop_web"]
     path = ktdevelop_web
-    url = https://github.com/thanawatkate/ktdevelop_web.git
+    url = git@github.com:thanawatkate/ktdevelop_web.git
  
 	
 [submodule "cookie-banner"]
 	path = cookie-banner
-	url = https://github.com/thanawatkate/cookie-banner-system.git
+	url = git@github.com:thanawatkate/cookie-banner-system.git
     
 
 [submodule "saccmproject"]
 	path = saccmproject
-	url = https://github.com/thanawatkate/saccmproject.git
+	url = git@github.com:thanawatkate/saccmproject.git
   
 
 [submodule "aihubproject"]
     path = aihubproject
-    url = https://github.com/thanawatkate/aihubproject.git
+    url = git@github.com:thanawatkate/aihubproject.git
     
 [submodule "SimTally"]
 	path = SimTally
-	url = https://github.com/thanawatkate/SimTally-By-KTdev.git
+	url = git@github.com:thanawatkate/SimTally-By-KTdev.git
 
 [submodule "ThaiSnapAI"]
 	path = ThaiSnapAI
