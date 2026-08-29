@@ -25,3 +25,7 @@
 [submodule "SimTally"]
 	path = SimTally
 	url = https://github.com/thanawatkate/SimTally-By-KTdev.git
+
+[submodule "ThaiSnapAI"]
+	path = ThaiSnapAI
+	url = git@github.com:thanawatkate/ThaiSnapAI.git
