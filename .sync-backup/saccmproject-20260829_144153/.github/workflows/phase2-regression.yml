@@ -1,0 +1,187 @@
+name: Phase 2 Regression
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  frontend:
+    name: Flutter Analyze And Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: forntend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Verify generated Flutter files are committed
+        working-directory: .
+        run: |
+          git diff --exit-code -- \
+            forntend/pubspec.lock \
+            forntend/linux/flutter/generated_plugin_registrant.cc \
+            forntend/linux/flutter/generated_plugins.cmake \
+            forntend/macos/Flutter/GeneratedPluginRegistrant.swift \
+            forntend/windows/flutter/generated_plugin_registrant.cc \
+            forntend/windows/flutter/generated_plugins.cmake
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test
+
+  backend:
+    name: Backend Migration And Tests
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: sacc_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      NODE_ENV: test
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: sacc_test
+      SECRETKEY: ci-test-secret
+      INTERNAL_API_SECRET: ci-internal-secret
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Syntax check backend
+        run: |
+          node --check index.js
+          git ls-files "src/**/*.js" | xargs -r -n 1 node --check
+
+      - name: Migrate test database
+        run: npm run migrate
+
+      - name: Backend smoke tests
+        run: |
+          npm test
+
+      - name: Backend HTTP e2e smoke tests
+        run: npm run test:e2e:http
+
+  registry:
+    name: Registry Migration And Keygen
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: saccm_registry_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    defaults:
+      run:
+        working-directory: registry-backend
+    env:
+      NODE_ENV: test
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: saccm_registry_test
+      INTERNAL_API_SECRET: ci-internal-secret
+      LICENSE_ADMIN_SECRET: ci-license-admin-secret
+      KEYGEN_ISSUED_BY: ci
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: registry-backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Syntax check registry
+        run: |
+          node --check index.js
+          git ls-files "src/**/*.js" "scripts/**/*.js" | xargs -r -n 1 node --check
+
+      - name: Migrate registry database
+        run: npm run migrate
+
+      - name: Keygen smoke
+        run: npm run keygen:offline -- --name "CI School"
+
+  release-scripts:
+    name: Release Script Syntax
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Parse PowerShell release scripts
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $scripts = Get-ChildItem -Path release -Filter *.ps1 -Recurse
+          foreach ($script in $scripts) {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($script.FullName, [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors.Count -gt 0) {
+              $errors | ForEach-Object { Write-Error "$($script.FullName): $($_.Message)" }
+              exit 1
+            }
+          }
+
+      - name: Syntax check Node release scripts
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $scripts = Get-ChildItem -Path release -Filter *.js -Recurse
+          foreach ($script in $scripts) {
+            node --check $script.FullName
+          }
+

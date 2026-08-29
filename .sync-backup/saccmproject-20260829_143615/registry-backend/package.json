@@ -1,0 +1,29 @@
+{
+  "name": "saccm-registry",
+  "version": "1.0.0",
+  "description": "SACCM central registry — keygen, license, activation logs (แยกจาก API ออนไลน์)",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "migrate": "node src/utils/ensure-database.js && knex migrate:latest",
+    "keygen": "node scripts/keygen.js",
+    "keygen:online": "node scripts/keygen.js --online",
+    "keygen:offline": "node scripts/keygen.js",
+    "license:revoke": "node scripts/revoke-license.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "compression": "^1.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^8.5.2",
+    "helmet": "^8.2.0",
+    "knex": "^3.0.1",
+    "mysql2": "^3.19.0"
+  },
+  "license": "ISC"
+}

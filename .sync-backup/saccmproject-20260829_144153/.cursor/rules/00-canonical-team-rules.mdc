@@ -1,0 +1,22 @@
+---
+description: Canonical project rules pointer
+alwaysApply: true
+---
+
+# Canonical Rules
+
+Use `TEAM_RULES.md` as the single canonical rule file for this repository.
+
+## Required behavior
+
+- Follow `TEAM_RULES.md` first for all architecture, UI, DB, security, testing, and workflow decisions.
+- If another guidance file conflicts, prefer `TEAM_RULES.md`.
+- Keep suggestions aligned with existing repository patterns and paths defined in `TEAM_RULES.md`.
+- For Flutter UI layout and form pages, follow **`TEAM_RULES.md` §4.3.1** (canonical: `income_add_page.dart`; loan pages are secondary references).
+- For popup, dialog, picker, and bottom sheet patterns, follow **`TEAM_RULES.md` §4.3.4** and prefer shared components (`AdaptiveContentSheet`, `ConfirmDialog`, `AppLookupPickerField`, `PageGuideDialog`).
+- For Registry, license, activation, trial, `SACC_REGISTRY_BASE`, and post-activate master sync, follow **`TEAM_RULES.md` §14** and **`docs/registry-and-license.html`**.
+
+## Notes
+
+- Detailed Cursor-specific files may exist, but `TEAM_RULES.md` is the source of truth.
+- When team rules change, update `TEAM_RULES.md` first, then update any pointer files.

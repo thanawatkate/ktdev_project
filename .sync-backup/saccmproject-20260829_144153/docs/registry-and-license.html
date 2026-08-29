@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="คู่มือ Registry, License และการเชื่อมต่อแอป Flutter — โปรเจกต์ SACCM">
+  <title>SACCM — Registry, License และการแจกจ่าย</title>
+  <style>
+    :root {
+      --bg: #f8f9fb;
+      --surface: #ffffff;
+      --text: #1a1d26;
+      --muted: #5c6370;
+      --border: #dde1e8;
+      --accent: #0d5c8c;
+      --accent-soft: #e8f2f8;
+      --code-bg: #f1f3f6;
+      --warn-bg: #fff8e6;
+      --warn-border: #e6c200;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Noto Sans Thai", "Kanit", system-ui, sans-serif;
+      font-size: 16px;
+      line-height: 1.65;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    header {
+      background: linear-gradient(135deg, #0d5c8c 0%, #0a3d5c 100%);
+      color: #fff;
+      padding: 2.5rem 1.5rem 2rem;
+    }
+
+    header h1 {
+      margin: 0 0 0.5rem;
+      font-size: 1.75rem;
+      font-weight: 700;
+    }
+
+    header p {
+      margin: 0;
+      opacity: 0.92;
+      max-width: 52rem;
+    }
+
+    .meta {
+      margin-top: 1rem;
+      font-size: 0.875rem;
+      opacity: 0.85;
+    }
+
+    main {
+      max-width: 52rem;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    nav#toc {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    nav#toc h2 {
+      margin: 0 0 0.75rem;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+
+    nav#toc ol {
+      margin: 0;
+      padding-left: 1.25rem;
+    }
+
+    nav#toc a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    nav#toc a:hover { text-decoration: underline; }
+
+    section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem 1.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    h2 {
+      margin: 0 0 1rem;
+      font-size: 1.35rem;
+      color: var(--accent);
+      border-bottom: 2px solid var(--accent-soft);
+      padding-bottom: 0.5rem;
+    }
+
+    h3 {
+      margin: 1.5rem 0 0.75rem;
+      font-size: 1.1rem;
+    }
+
+    h4 {
+      margin: 1.25rem 0 0.5rem;
+      font-size: 1rem;
+      color: var(--muted);
+    }
+
+    p { margin: 0 0 1rem; }
+
+    ul, ol {
+      margin: 0 0 1rem;
+      padding-left: 1.5rem;
+    }
+
+    li { margin-bottom: 0.35rem; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0 0 1rem;
+      font-size: 0.9375rem;
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: var(--accent-soft);
+      font-weight: 600;
+    }
+
+    code, pre {
+      font-family: Consolas, "Cascadia Code", "Fira Code", monospace;
+      font-size: 0.875rem;
+    }
+
+    code {
+      background: var(--code-bg);
+      padding: 0.15em 0.4em;
+      border-radius: 4px;
+    }
+
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 0 0 1rem;
+      line-height: 1.45;
+    }
+
+    pre.diagram {
+      white-space: pre;
+      font-size: 0.8125rem;
+    }
+
+    .note {
+      background: var(--accent-soft);
+      border-left: 4px solid var(--accent);
+      padding: 0.75rem 1rem;
+      margin: 0 0 1rem;
+      border-radius: 0 6px 6px 0;
+    }
+
+    .warn {
+      background: var(--warn-bg);
+      border-left: 4px solid var(--warn-border);
+      padding: 0.75rem 1rem;
+      margin: 0 0 1rem;
+      border-radius: 0 6px 6px 0;
+    }
+
+    .path {
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem 1.5rem;
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+
+    @media print {
+      body { background: #fff; }
+      section, nav#toc { break-inside: avoid; box-shadow: none; }
+      header { background: #0d5c8c; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Registry, License และการแจกจ่าย SACCM</h1>
+    <p>เอกสารอ้างอิงสำหรับทีมพัฒนาและ AI agent — อธิบายบทบาท <code>registry-backend</code> การเรียกจากแอป Flutter การซิงก์ master data หลัง activate และการตั้งค่า <code>SACC_REGISTRY_BASE</code> ตอน build Windows</p>
+    <p class="meta">อัปเดต: 2026-06-23 · Canonical: <code>TEAM_RULES.md</code> §14 · เปิดในเบราว์เซอร์หรือพิมพ์เป็น PDF ได้</p>
+  </header>
+
+  <main>
+    <nav id="toc" aria-label="สารบัญ">
+      <h2>สารบัญ</h2>
+      <ol>
+        <li><a href="#overview">ภาพรวมสถาปัตยกรรม 3 ชั้น</a></li>
+        <li><a href="#registry-backend">registry-backend ทำงานอย่างไร</a></li>
+        <li><a href="#flutter-registry">แอป Flutter เรียก Registry</a></li>
+        <li><a href="#master-sync">MasterDataSyncService หลัง activate</a></li>
+        <li><a href="#build-windows">การตั้ง SACC_REGISTRY_BASE ตอน build Windows</a></li>
+        <li><a href="#paths">Path quick-reference</a></li>
+        <li><a href="#rules">กฎโปรเจกต์ที่เกี่ยวข้อง</a></li>
+      </ol>
+    </nav>
+
+    <section id="overview">
+      <h2>1. ภาพรวมสถาปัตยกรรม 3 ชั้น</h2>
+      <p>SACCM แยกบริการ license ออกจาก Online API อย่างชัดเจน — ข้อมูลการเงินไม่เก็บใน Registry</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ชั้น</th>
+            <th>ที่อยู่</th>
+            <th>พอร์ต (ค่าเริ่มต้น)</th>
+            <th>หน้าที่</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>ทดลองใช้บนเครื่อง</strong></td>
+            <td><code>forntend/lib/features/license/embedded_trial_license.dart</code></td>
+            <td>—</td>
+            <td><code>kEmbeddedTrialDays = 90</code> — วันแรกไม่ต้องลงทะเบียน Registry</td>
+          </tr>
+          <tr>
+            <td><strong>Registry</strong></td>
+            <td><code>registry-backend/</code></td>
+            <td>3802</td>
+            <td>keygen, activate, log, รายการเครื่อง, trial anchor</td>
+          </tr>
+          <tr>
+            <td><strong>Online API</strong></td>
+            <td><code>backend/</code></td>
+            <td>3801</td>
+            <td>ข้อมูลการเงิน, sync, JWT login — <strong>ไม่มี</strong> license</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <pre class="diagram">[Registry :3802]  DB: saccm_registry
+    │ activate → log
+    │ provision (online เท่านั้น) ──┐
+    ▼                                ▼
+[Online API :3801]  saccm_master + saccm_&lt;school_code&gt;
+
+[แอปโรงเรียน] → Registry (license/trial) + Online API (sync/login)</pre>
+
+      <p>เอกสารที่เกี่ยวข้อง: <code>release/docs/KEYGEN-DESIGN.md</code>, <code>docs/PRODUCT-TIERS.md</code>, <code>release/README-DISTRIBUTION.md</code></p>
+    </section>
+
+    <section id="registry-backend">
+      <h2>2. registry-backend ทำงานอย่างไร</h2>
+
+      <h3>2.1 Entry point</h3>
+      <p class="path">ไฟล์: <code>registry-backend/index.js</code></p>
+      <ol>
+        <li>ตรวจ config (<code>validateRegistryRuntimeConfig</code>)</li>
+        <li>สร้าง Express + HTTP hardening (helmet, CORS, rate limit)</li>
+        <li>สร้าง DB <code>saccm_registry</code> ถ้ายังไม่มี แล้วรัน migration อัตโนมัติ</li>
+        <li>เปิดพอร์ต <strong>3802</strong> ที่ path <code>/registryapi</code></li>
+      </ol>
+
+      <h3>2.2 ฐานข้อมูล (แยกจาก backend)</h3>
+      <table>
+        <thead>
+          <tr><th>ตาราง</th><th>หน้าที่</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>school_license</code></td><td>hash รหัส (bcrypt), สถานะ, offline/online, วันหมดอายุ</td></tr>
+          <tr><td><code>school_device</code></td><td>เครื่องที่ activate (จำกัด <code>max_devices</code> default 3)</td></tr>
+          <tr><td><code>license_issue_log</code></td><td>บันทึกตอน keygen</td></tr>
+          <tr><td><code>license_activation_log</code></td><td>activate สำเร็จ/ล้มเหลว, heartbeat</td></tr>
+          <tr><td><code>trial_registration</code></td><td>anchor วันเริ่มทดลองใช้ต่อ fingerprint</td></tr>
+        </tbody>
+      </table>
+
+      <p>รหัสรูปแบบ <code>SACC-XXXX-XXXX-XXXX</code> — เก็บแค่ <strong>hash</strong> ไม่เก็บรหัสเต็ม (มี <code>key_hint</code> เช่น <code>...-AB12</code>)</p>
+
+      <h3>2.3 API Endpoints</h3>
+      <h4>สำหรับแอป (ไม่ต้อง admin secret)</h4>
+      <table>
+        <thead>
+          <tr><th>Method</th><th>Path</th><th>หน้าที่</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>GET</td><td><code>/registryapi</code></td><td>health / ping</td></tr>
+          <tr><td>POST</td><td><code>/registryapi/license/activate</code></td><td>เปิดใช้งาน + ลงทะเบียนเครื่อง</td></tr>
+          <tr><td>POST</td><td><code>/registryapi/license/validate</code></td><td>ตรวจรหัสก่อน activate</td></tr>
+          <tr><td>POST</td><td><code>/registryapi/license/status</code></td><td>สถานะ license + รายการเครื่อง</td></tr>
+          <tr><td>POST</td><td><code>/registryapi/license/heartbeat</code></td><td>อัปเดต <code>last_seen</code></td></tr>
+          <tr><td>POST</td><td><code>/registryapi/license/token</code></td><td>ขอ JWT สำหรับ sync (online เท่านั้น)</td></tr>
+          <tr><td>POST</td><td><code>/registryapi/trial/start</code></td><td>เริ่ม/ดึง trial ต่อ fingerprint (90 วัน server-anchored)</td></tr>
+        </tbody>
+      </table>
+
+      <h4>สำหรับผู้ให้บริการ (header <code>X-License-Admin-Secret</code>)</h4>
+      <table>
+        <thead>
+          <tr><th>Method</th><th>Path</th><th>หน้าที่</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>POST</td><td><code>/registryapi/license/admin/generate</code></td><td>ออกรหัสใหม่</td></tr>
+          <tr><td>GET</td><td><code>/registryapi/license/admin/list</code></td><td>รายการ license</td></tr>
+          <tr><td>GET</td><td><code>/registryapi/license/admin/issue-logs</code></td><td>log การออกรหัส</td></tr>
+          <tr><td>GET</td><td><code>/registryapi/license/admin/activation-logs</code></td><td>log การเปิดใช้งาน</td></tr>
+          <tr><td>POST</td><td><code>/registryapi/license/admin/revoke</code></td><td>ยกเลิกรหัส</td></tr>
+        </tbody>
+      </table>
+
+      <h3>2.4 Flow activate (online)</h3>
+      <pre class="diagram">Admin → Registry: keygen --name "โรงเรียน"
+Registry → Admin: SACC-ABCD-...
+
+App → Registry: POST /license/activate
+Registry → ตรวจ hash, สถานะ, จำนวนเครื่อง
+Registry → Online API: POST /internal/school/provision  (ครั้งแรก, online)
+Online API → สร้าง school_tenant + DB saccm_xxx
+Registry → Online API: POST /login/token
+Registry → App: schoolCode, JWT, canSync=true</pre>
+
+      <ul>
+        <li><strong>offline</strong>: ใช้งานออฟไลน์ได้ ไม่ provision DB</li>
+        <li><strong>online</strong>: ครั้งแรกที่ activate จะ provision โรงเรียนบน Online API แล้วคืน JWT</li>
+      </ul>
+
+      <h3>2.5 การเชื่อม Online API</h3>
+      <p class="path">ไฟล์: <code>registry-backend/src/services/online_client.js</code></p>
+      <ul>
+        <li><strong>Provision</strong>: <code>POST {ONLINE_API_BASE}internal/school/provision</code> + header <code>X-Internal-Secret</code></li>
+        <li><strong>Login token</strong>: <code>POST {ONLINE_API_BASE}login/token</code> + <code>schoolCode</code></li>
+      </ul>
+
+      <h3>2.6 Config สำคัญ (.env)</h3>
+      <table>
+        <thead>
+          <tr><th>ตัวแปร</th><th>หมายเหตุ</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>DB_NAME=saccm_registry</code></td><td>แยกจาก DB ของ backend</td></tr>
+          <tr><td><code>INTERNAL_API_SECRET</code></td><td>ต้องตรงกับ backend</td></tr>
+          <tr><td><code>LICENSE_ADMIN_SECRET</code></td><td>admin API / keygen ผ่าน HTTP</td></tr>
+          <tr><td><code>TRIAL_SIGNING_SECRET</code></td><td>เซ็น payload trial</td></tr>
+          <tr><td><code>ONLINE_API_BASE</code></td><td>เช่น <code>http://127.0.0.1:3801/saccapi/</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3>2.7 Keygen (CLI)</h3>
+      <pre>cd registry-backend
+npm run keygen:offline -- --name "โรงเรียนบ้านตัวอย่าง"
+npm run keygen:online -- --name "โรงเรียน ก." --days 365</pre>
+    </section>
+
+    <section id="flutter-registry">
+      <h2>3. แอป Flutter เรียก Registry</h2>
+
+      <h3>3.1 HTTP client</h3>
+      <p>แอปเรียก Registry ผ่าน <code>LicenseRemoteDataSource</code> (Dio) — base URL จาก <code>registryBase</code> ใน <code>forntend/lib/config.dart</code> แยกจาก Online API (<code>baseurl</code>)</p>
+
+      <pre>static const _defaultRegistryBase = String.fromEnvironment(
+  'SACC_REGISTRY_BASE',
+  defaultValue: 'https://ktdevelop.com/registryapi/',
+);</pre>
+
+      <div class="warn">
+        <strong>สำคัญ:</strong> <code>RuntimeConfig.loadFromPreferences()</code> เปลี่ยนได้เฉพาะ <code>SACC_API_BASE</code> จากหน้าตั้งค่า — <strong>Registry URL ไม่เปลี่ยน runtime</strong> (bake ตอน compile)
+      </div>
+
+      <h3>3.2 ชั้นโค้ด</h3>
+      <pre class="diagram">UI (LicenseActivationPage, LicenseGate, …)
+    ↓
+LicenseRemoteDataSource  ←→  Registry :3802/registryapi/
+LicenseLocalDataSource   (schoolCode, deviceId, tier ในเครื่อง)
+EmbeddedTrialLicense     (trial local + sync server)
+LicenseMode              (snapshot สถานะแอป)</pre>
+
+      <h3>3.3 เมื่อไหร่เรียก Registry</h3>
+      <table>
+        <thead>
+          <tr><th>จังหวะ</th><th>ไฟล์หลัก</th><th>Endpoint</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>เปิดแอป (ยังไม่มี license)</td>
+            <td><code>license_gate.dart</code>, <code>embedded_trial_license.dart</code></td>
+            <td><code>POST trial/start</code></td>
+          </tr>
+          <tr>
+            <td>ลงทะเบียนรหัส</td>
+            <td><code>license_activation_page.dart</code></td>
+            <td><code>GET /registryapi/</code>, <code>POST license/validate</code>, <code>POST license/activate</code></td>
+          </tr>
+          <tr>
+            <td>revalidate (online)</td>
+            <td><code>license_mode.dart</code></td>
+            <td><code>POST license/status</code></td>
+          </tr>
+          <tr>
+            <td>ระหว่างใช้งาน (online)</td>
+            <td><code>session_refresh_listener.dart</code></td>
+            <td><code>POST license/token</code>, <code>POST license/heartbeat</code></td>
+          </tr>
+          <tr>
+            <td>refresh JWT</td>
+            <td><code>session_token_service.dart</code></td>
+            <td><code>POST license/token</code></td>
+          </tr>
+          <tr>
+            <td>Admin ในแอป</td>
+            <td><code>license_admin_page.dart</code></td>
+            <td><code>license/admin/*</code> + <code>X-License-Admin-Secret</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>3.4 Payload activate</h3>
+      <pre>{
+  "licenseKey": "SACC-....",
+  "deviceId": "&lt;hex จาก LicenseLocalDataSource&gt;",
+  "deviceLabel": "เครื่องหลัก",
+  "platform": "windows|android|...",
+  "adminUsername": "...",
+  "adminPassword": "...",
+  "adminName": "...",
+  "adminLastname": "..."
+}</pre>
+
+      <h3>3.5 Trial anchor (Tier B)</h3>
+      <p><code>DeviceFingerprint.get()</code> สร้าง SHA256 จาก hardware/install id แล้วเรียก <code>POST trial/start</code> — ใช้วันหมดอายุที่ <strong>เร็วกว่า</strong> ระหว่าง local กับ server เสมอ</p>
+
+      <h3>3.6 สิ่งที่แอปไม่เรียก Registry</h3>
+      <ul>
+        <li>Login ปกติ / sync ข้อมูลการเงิน → Online API (<code>baseurl</code>)</li>
+        <li>ทดลองใช้วันแรกแบบ offline → local เท่านั้น</li>
+      </ul>
+    </section>
+
+    <section id="master-sync">
+      <h2>4. MasterDataSyncService หลัง activate</h2>
+
+      <h3>4.1 เมื่อไหร่รัน</h3>
+      <p>หลัง <code>POST license/activate</code> สำเร็จ — <code>LicenseActivationPage</code> เรียก sync <strong>เฉพาะแพ็กเกจ online</strong> (<code>result.canSync == true</code>)</p>
+      <p>แพ็กเกจ <strong>offline</strong> ข้าม sync ทั้งหมด แล้วไปหน้า login</p>
+
+      <pre class="diagram">Registry: activate → token, schoolCode, canSync=true
+Local: saveActivation (JWT ใน SecureCredentialStore)
+MasterDataSyncService.run() → Online API (ไม่ใช่ Registry)
+→ SimpleLoginPage</pre>
+
+      <h3>4.2 เงื่อนไขใน run()</h3>
+      <p class="path">ไฟล์: <code>forntend/lib/core/services/master_data_sync_service.dart</code></p>
+      <ol>
+        <li><code>LicenseMode.canSyncOnline()</code> ต้องเป็น true</li>
+        <li>มีเน็ต (<code>NetworkInfoService.isConnected</code>)</li>
+        <li>Phase 1: <code>BackupFullMirrorSync.runMastersOnly</code></li>
+        <li>Phase 2: ดึงเมนูด้วย JWT (<code>MenuRemoteDataSource.fetchAllRows</code>)</li>
+      </ol>
+
+      <h3>4.3 Master tables ที่ดึง (Phase 1)</h3>
+      <p>จาก Online API (<code>SACC_API_BASE</code>) — ไม่ดึงรายการธุรกรรม (income/expense/loan)</p>
+      <table>
+        <thead>
+          <tr><th>API endpoint</th><th>ตาราง SQLite</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>bank</code></td><td><code>bank</code></td></tr>
+          <tr><td><code>usersgroup</code></td><td><code>usergroup</code></td></tr>
+          <tr><td><code>prefix</code></td><td><code>prefix</code></td></tr>
+          <tr><td><code>docgroup</code></td><td><code>doc_group</code></td></tr>
+          <tr><td><code>moneygroup</code></td><td><code>money_group</code></td></tr>
+          <tr><td><code>moneytype</code></td><td><code>money_type</code></td></tr>
+          <tr><td><code>incometype</code></td><td><code>income_type</code></td></tr>
+          <tr><td><code>expensetype</code></td><td><code>expense_type</code></td></tr>
+          <tr><td><code>budgetsource?fullSync=1</code></td><td><code>budget_source_master</code>, <code>budget_source_budget</code>, <code>income_type_budget_source_map</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3>4.4 Phase 2 — เมนู</h3>
+      <p><code>GET {baseurl}menu/rows?token=JWT</code> แล้วแทนที่เมนู local ทั้งหมด</p>
+
+      <h3>4.5 ถ้า sync ล้มเหลว</h3>
+      <ul>
+        <li>แสดง warning แต่ยังไปหน้า login ได้ — activate ไม่ถูก rollback</li>
+        <li>ซิงก์ซ้ำได้จาก <code>LicenseInfoPage</code></li>
+      </ul>
+    </section>
+
+    <section id="build-windows">
+      <h2>5. การตั้ง SACC_REGISTRY_BASE ตอน build Windows</h2>
+
+      <h3>5.1 Compile-time constant</h3>
+      <p><code>SACC_REGISTRY_BASE</code> ถูก bake เข้า binary ผ่าน <code>--dart-define</code> ตอน <code>flutter build</code> / <code>flutter run</code></p>
+
+      <h3>5.2 Protected build (dev/internal)</h3>
+      <pre>pwsh forntend\tool\build_windows_protected.ps1
+
+pwsh forntend\tool\build_windows_protected.ps1 `
+  -ApiBase "https://your-server.example.com/saccapi/" `
+  -RegistryBase "https://your-server.example.com/registryapi/"</pre>
+      <p>ผลลัพธ์: <code>forntend\build\windows\x64\runner\Release\</code></p>
+
+      <h3>5.3 Release แจกโรงเรียน</h3>
+      <pre>cd release\scripts
+.\build-release.ps1 `
+  -SchoolSlug "school-a" `
+  -ApiBase "https://your-server.example.com" `
+  -RegistryBase "https://your-server.example.com" `
+  -Version "1.0.0+1"</pre>
+      <p>สคริปต์ normalize URL เป็น <code>/saccapi/</code> และ <code>/registryapi/</code> แล้ว build ทั้ง Windows และ Android</p>
+
+      <h3>5.4 Dev บนเครื่อง</h3>
+      <pre>cd forntend
+flutter run -d windows `
+  --dart-define=SACC_API_BASE=http://127.0.0.1:3801/saccapi/ `
+  --dart-define=SACC_REGISTRY_BASE=http://127.0.0.1:3802/registryapi/</pre>
+
+      <h3>5.5 ความต่าง API vs Registry หลัง build</h3>
+      <table>
+        <thead>
+          <tr><th>ค่า</th><th>ตั้งตอน build</th><th>เปลี่ยนในแอปได้?</th><th>ใช้กับ</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>SACC_API_BASE</code></td><td><code>--dart-define</code></td><td>ได้ (Settings)</td><td>sync, login, master data</td></tr>
+          <tr><td><code>SACC_REGISTRY_BASE</code></td><td><code>--dart-define</code></td><td><strong>ไม่ได้</strong></td><td>activate, trial, heartbeat, token</td></tr>
+        </tbody>
+      </table>
+
+      <div class="note">
+        ถ้า Registry กับ Online API อยู่คนละ host ต้องใส่ <code>-RegistryBase</code> แยกตอน build — ผู้ใช้แก้จากหน้าตั้งค่าในแอปไม่ได้
+      </div>
+    </section>
+
+    <section id="paths">
+      <h2>6. Path quick-reference</h2>
+      <table>
+        <thead>
+          <tr><th>หัวข้อ</th><th>Path</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Registry entry</td><td><code>registry-backend/index.js</code></td></tr>
+          <tr><td>License service</td><td><code>registry-backend/src/services/license.service.js</code></td></tr>
+          <tr><td>Trial service</td><td><code>registry-backend/src/services/trial.service.js</code></td></tr>
+          <tr><td>Online client (provision)</td><td><code>registry-backend/src/services/online_client.js</code></td></tr>
+          <tr><td>Flutter Registry client</td><td><code>forntend/lib/features/license/data/datasources/license_remote_data_source.dart</code></td></tr>
+          <tr><td>Runtime config</td><td><code>forntend/lib/config.dart</code></td></tr>
+          <tr><td>Master sync</td><td><code>forntend/lib/core/services/master_data_sync_service.dart</code></td></tr>
+          <tr><td>Windows protected build</td><td><code>forntend/tool/build_windows_protected.ps1</code></td></tr>
+          <tr><td>Release build</td><td><code>release/scripts/build-release.ps1</code></td></tr>
+          <tr><td>Keygen design</td><td><code>release/docs/KEYGEN-DESIGN.md</code></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="rules">
+      <h2>7. กฎโปรเจกต์ที่เกี่ยวข้อง</h2>
+      <ul>
+        <li>Canonical rule file: <code>TEAM_RULES.md</code> §14 (Registry, License และการแจกจ่าย)</li>
+        <li>Local-first + sync gate: <code>TEAM_RULES.md</code> §4.2, §4.2.3</li>
+        <li>ข้อยกเว้น remote read สำหรับ Registry: <code>TEAM_RULES.md</code> §4.2 (activation, token refresh, admin license console)</li>
+        <li>แพ็กเกจการขาย: <code>docs/PRODUCT-TIERS.md</code></li>
+        <li>ห้ามเก็บ license / device ใน Online API — ใช้ <code>school_tenant</code> แมป <code>school_code</code> → <code>db_name</code> เท่านั้น</li>
+        <li>ห้ามใช้ <code>registry-backend</code> DB เดียวกับ backend (<code>saccm_registry</code> แยกเสมอ)</li>
+        <li>เมื่อแก้ endpoint Registry หรือ flow activate/sync ต้องอัปเดตเอกสารนี้และ §14 ใน <code>TEAM_RULES.md</code> พร้อมกัน</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    SACCM Project — docs/registry-and-license.html
+  </footer>
+</body>
+</html>

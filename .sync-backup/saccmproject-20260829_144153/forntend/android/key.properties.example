@@ -1,0 +1,4 @@
+storeFile=C:\\path\\to\\saccm-upload-keystore.jks
+storePassword=CHANGE_ME
+keyAlias=saccm-upload
+keyPassword=CHANGE_ME

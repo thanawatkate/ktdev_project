@@ -1,0 +1,71 @@
+{
+  "name": "saccapi",
+  "version": "1.0.0",
+  "description": "edit project by nodejs",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "compression": "^1.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-group-routes": "^1.1.0",
+    "express-rate-limit": "^8.5.2",
+    "helmet": "^8.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "knex": "^3.0.1",
+    "mariadb": "^3.3.1",
+    "moment": "^2.30.1",
+    "mysql": "^2.18.1",
+    "mysql2": "^3.19.0",
+    "pdfkit": "^0.18.0",
+    "qs": "^6.11.0"
+  },
+  "scripts": {
+    "test": "npm run test:repo-hygiene && npm run test:sql-safety && npm run test:auth-routes && npm run test:reports && npm run test:register-ledger-smoke",
+    "test:e2e:expense-http": "node test/expense_http_e2e_smoke.js",
+    "test:e2e:expense-http:auto-server": "node test/run_expense_http_smoke_with_server.js",
+    "test:e2e:auth-boundary-http": "node test/auth_boundary_http_smoke.js",
+    "test:e2e:auth-boundary-http:auto-server": "node test/run_auth_boundary_http_smoke_with_server.js",
+    "test:e2e:approval-http": "node test/approval_http_e2e_smoke.js",
+    "test:e2e:approval-http:auto-server": "node test/run_approval_http_smoke_with_server.js",
+    "test:e2e:http": "npm run test:e2e:auth-boundary-http:auto-server && npm run test:e2e:approval-http:auto-server && npm run test:e2e:expense-http:auto-server",
+    "test:e2e:http:staging": "node test/staging_http_smoke.js",
+    "test:register-ledger-smoke": "node test/register_ledger_smoke.js",
+    "test:reports": "node test/reports_unit_smoke.js",
+    "test:auth-routes": "node test/auth_route_static_check.js",
+    "test:repo-hygiene": "node test/repo_hygiene_static_check.js",
+    "test:sql-safety": "node test/sql_safety_static_check.js",
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "ensure-db": "node src/utils/ensure-database.js",
+    "migrate": "node src/utils/ensure-database.js && knex migrate:latest",
+    "migrate:rollback": "node src/utils/ensure-database.js && knex migrate:rollback",
+    "migrate:list": "node src/utils/ensure-database.js && knex migrate:list",
+    "migrate:unlock": "node src/utils/ensure-database.js && knex migrate:unlock",
+    "migrate:make": "knex migrate:make",
+    "checkNode": "nvm list",
+    "useNode16": "nvm use 16",
+    "useNode18": "nvm use 18",
+    "useNode20": "nvm use 20"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "**/test/**",
+      "**/docs/**"
+    ],
+    "delay": 200
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

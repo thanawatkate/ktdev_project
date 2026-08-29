@@ -1,0 +1,23 @@
+# Local production MariaDB for SACCM (backend + registry DBs)
+# Started by: release\scripts\bootstrap-production-local.ps1
+
+services:
+  saccm-mariadb:
+    image: mariadb:11.4
+    container_name: saccm-mariadb
+    restart: unless-stopped
+    ports:
+      - "${SACCM_DB_PORT:-3306}:3306"
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+    volumes:
+      - saccm-mariadb-data:/var/lib/mysql
+      - ./init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  saccm-mariadb-data:

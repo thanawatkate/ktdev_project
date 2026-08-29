@@ -1,0 +1,6 @@
+# PyMuPDF extraction (pages=52)
+
+[total chars extracted: 0]
+
+
+##### pdfplumber attempt #####

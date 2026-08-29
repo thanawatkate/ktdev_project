@@ -1,0 +1,77 @@
+# SACCM reverse proxy — place in /etc/nginx/sites-available/saccm
+# then: ln -s .../sites-available/saccm .../sites-enabled/saccm && nginx -t && systemctl reload nginx
+#
+# Replace SERVER_NAME with your public host (e.g. ktdevelop.com).
+# Node apps listen on 127.0.0.1:3801 (API) and :3802 (Registry) via PM2.
+
+upstream saccm_api {
+    server 127.0.0.1:3801;
+    keepalive 8;
+}
+
+upstream saccm_registry {
+    server 127.0.0.1:3802;
+    keepalive 4;
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name SERVER_NAME;
+
+    # Redirect HTTP to HTTPS (adjust if TLS terminates elsewhere)
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name SERVER_NAME;
+
+    # --- TLS: use certbot or your panel certificates ---
+    ssl_certificate     /etc/letsencrypt/live/SERVER_NAME/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/SERVER_NAME/privkey.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+
+    client_max_body_size 2m;
+
+    location = /saccapi {
+        proxy_pass http://saccm_api;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Connection "";
+    }
+
+    location /saccapi/ {
+        proxy_pass http://saccm_api;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Connection "";
+    }
+
+    location = /registryapi {
+        proxy_pass http://saccm_registry;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Connection "";
+    }
+
+    location /registryapi/ {
+        proxy_pass http://saccm_registry;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Connection "";
+    }
+}

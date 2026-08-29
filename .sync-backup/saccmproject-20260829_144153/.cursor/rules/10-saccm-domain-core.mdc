@@ -1,0 +1,185 @@
+---
+description: SACCM domain core — โครงข้อมูลหลักของระบบควบคุมการเงินสถานศึกษาตามคู่มือ พ.ศ. 2544
+alwaysApply: true
+---
+
+# SACCM Domain Core (ใจกลางระบบ)
+
+ไฟล์นี้บันทึก "ใจกลางระบบ" ที่อ้างอิงคู่มือการปฏิบัติงานการเงิน — สำนักงานเขตพื้นที่การศึกษาประถมศึกษายะลา เขต 2 (มี.ค. 2564 ตามระบบควบคุมการเงินของหน่วยงานย่อย พ.ศ. 2544) — เพื่อให้ AI agent และทีมไม่หลงทิศเมื่อเพิ่ม/แก้ feature ที่เกี่ยวกับการเงิน
+
+> เอกสารต้นทาง: `docs/document-ref/คู่มือการปฎิบัติงานการเงิน.pdf` (52 หน้า สแกน — render ภาพไว้ที่ `tool/_pdf_pages/`)
+
+## 1. ประเภทเงินที่สถานศึกษาได้รับ (คู่มือหน้า 1-3)
+
+มี 3 ประเภทหลัก เก็บใน `moneygroup` (backend) / `money_group` (frontend SQLite):
+
+| id | name | sort | คู่มือ |
+|---|---|---|---|
+| 1 | เงินรายได้แผ่นดิน | 1 | หน้า 2 |
+| 2 | เงินนอกงบประมาณ | 3 | หน้า 2 |
+| 3 | เงินภาษีหัก ณ ที่จ่าย | 4 | section 2.2.7 หน้า 10 |
+| 4 | เงินประกันสัญญา | 5 | section 2.2.8 หน้า 10 |
+| 5 | เงินงบประมาณ | 2 | หน้า 1 |
+
+> id 3, 4 เป็น sub-category ของเงินนอกงบประมาณ "ที่ต้องคืนผู้มีสิทธิ์" (section 3.2 หน้า 7) — แยก row เพื่อให้รายงาน daily balance หน้า 34 แสดงแถวแยกได้
+
+Seed source: `backend/data/seeds/seeds07_moneygroupData.js`
+
+## 2. หมวดเงินนอกงบประมาณ 13 หมวด (OB-01..OB-13)
+
+ใช้กับ `incometype` (backend) + `income_type` + `offbudget_category` (frontend) — เป็นทะเบียนคุมที่ใช้ในรายงานหน้า 40-41
+
+| code | ชื่อ | sort | อ้างอิงคู่มือ |
+|---|---|---|---|
+| OB-01 | ค่าจัดการเรียนการสอน | 101 | หน้า 7 (เงินอุดหนุนรายหัว #1) |
+| OB-02 | ปัจจัยพื้นฐานนักเรียนยากจน | 102 | หน้า 7 (เงินอุดหนุนรายหัว/ปัจจัยพื้นฐาน) |
+| OB-03 | ค่าหนังสือเรียน | 103 | หน้า 7 (#2) |
+| OB-04 | ค่าอุปกรณ์การเรียน | 104 | หน้า 7 (#3) |
+| OB-05 | ค่าเครื่องแบบนักเรียน | 105 | หน้า 7 (#4) |
+| OB-06 | ค่ากิจกรรมพัฒนาผู้เรียน | 106 | หน้า 7 (#5) |
+| OB-07 | เงินบำรุงลูกเสือ-เนตรนารี-ยุวกาชาด | 107 | หน้า 10 (sections 2.2.4, 2.2.5, 2.2.6 รวมกัน) |
+| OB-08 | ค่าเครื่องแบบลูกเสือ-เนตรนารี | 108 | หน้า 10 (ของใช้ตามระเบียบลูกเสือ) |
+| OB-09 | เงินอุดหนุนโครงการอาหารกลางวัน | 109 | หน้า 8-9 + section 2.2.3 หน้า 10 |
+| OB-10 | เงินดอกผลกองทุนโครงการอาหารกลางวัน | 110 | หน้า 9 (ดอกผลของกองทุนอาหารกลางวัน) |
+| OB-11 | เงินกองทุนเพื่อความเสมอภาคทางการศึกษา (กสศ.) | 111 | หน้า 9 (ขยายเพิ่มเติม) |
+| OB-12 | ดอกเบี้ยบัญชีเงินอุดหนุนอื่น | 112 | หน้า 6 (รายได้เบ็ดเตล็ด) |
+| OB-13 | ดอกเบี้ยบัญชีโครงการอาหารกลางวัน | 113 | หน้า 9 (ดอกผลที่นำส่งคลัง) |
+
+Seed source:
+- Backend: `backend/migrations/20260506000001_seed_offbudget_categories.js`
+- Frontend: `_seedIncomeTypes()` + `_seedOffBudgetCategoryRows()` ใน `app_database.dart`
+
+> เงินประกันสัญญา (section 2.2.8) และเงินภาษีหัก ณ ที่จ่าย (section 2.2.7) **ไม่อยู่ใน 13 OB list** เพราะใช้ `deposit_guarantee` table แยก (รูปแบบทะเบียนต่าง — หน้า 42)
+
+### 2.1 หมวดรายรับ กับ แหล่งเงิน — ให้สอดคล้องคู่มือการปฏิบัติงานการเงิน
+
+อ้างอิงคู่มือ (ระบบควบคุมการเงินของหน่วยงานย่อย พ.ศ. 2544) โดยเฉพาะการบันทึกทะเบียนคุม **แยกตามประเภทเงิน** (เช่น เนื้อหาใกล้เคียงหน้า 40–41 และขั้นตอนรับเงินนอกงบประมาณที่ระบุให้บันทึก *ตามประเภทของเงิน*):
+
+| หลักการคู่มือ | การแมปใน SACCM |
+|---|---|
+| ทะเบียน/รายการควรแยกตาม **ประเภทเงิน** ไม่ปนกันในสายเดียว | หมวดรายรับ (`incometype` / OB-01..OB-13) = **สายประเภท** หนึ่งสายต่อทะเบียนที่คู่มือแยกไว้ |
+| แต่ละครั้งที่รับเงิน บันทึกเป็นครั้งๆ ไป | หัวเอกสาร `income` เลือก **หนึ่ง** `refbudgetsource` ต่อหนึ่งใบ |
+| มีได้หลายแถวเมื่อแยกปีงบหรือสายย่อยชัดเจน | **หลาย** `budgetsource` (หรือ master+งบรายปีบน SQLite) ต่อหมวดได้เมื่อเป็น **คนละปีงบประมาณ** หรือ **โครงการ/สายย่อย** ภายใต้ประเภทเดียวกัน — **ไม่** ใช้หมวดเดียวรวมประเภทเงินคนละชนิดที่คู่มือให้แยกทะเบียน |
+
+> แนวปฏิบัติ: ผูกแหล่งเงินกับหมวดเฉพาะที่เป็นสายเดียวกับประเภทนั้น; ถ้าต้องการคุมสายใหม่ที่คู่มือถือเป็นคนละประเภท ให้ใช้ **หมวดรายรับคนละหมวด** (หรือหมวดที่สัมพันธ์กับ `moneygroup`/`incometype.code` ที่ถูกต้อง) แทนการรวมหลายประเภทในหมวดเดียว
+
+> **การบังคับในระบบ:** เมื่อผูก **มากกว่า 1** แหล่งกับหมวดรายรับ — backend (`incometype.service`) และแอป offline (`IncomeTypeProvider.validateLinkedBudgetSourcesForSchoolFinance`) ตรวจว่า `refmoneygroup` / `budget_type` / การอ้างหมวดเดิม (`refincometype` บน MariaDB, `refFundCategory` บน SQLite) **สอดคล้องกันทุกแหล่ง** ไม่เช่นนั้นจะปฏิเสธการบันทึก
+
+## 3. ประเภทรายจ่าย 9 ประเภท (expense_type)
+
+อิง "ระเบียบกระทรวงการคลังว่าด้วยการจัดซื้อจัดจ้างฯ พ.ศ. 2560" + รายงานรับ-จ่ายประจำปีหน้า 33
+
+| code | ชื่อ | กลุ่มในรายงานหน้า 33 | sort |
+|---|---|---|---|
+| 00 | งบบุคลากร — ค่าจ้างชั่วคราว | งบบุคลากร (รายการที่ 1) | 0 |
+| 01 | ค่าตอบแทน | งบดำเนินงาน 2.1 | 1 |
+| 02 | ค่าใช้สอย | งบดำเนินงาน 2.2 | 2 |
+| 03 | ค่าวัสดุ | งบดำเนินงาน 2.3 | 3 |
+| 04 | ค่าสาธารณูปโภค | งบดำเนินงาน 2.4 | 4 |
+| 05 | ค่าครุภัณฑ์ | งบลงทุน 3.1 | 5 |
+| 06 | ค่าที่ดินและสิ่งก่อสร้าง | งบลงทุน 3.2 | 6 |
+| 07 | เงินอุดหนุน | งบเงินอุดหนุน (รายการที่ 4) | 7 |
+| 08 | รายจ่ายอื่น | อื่น ๆ (รายการที่ 5) | 8 |
+
+Seed source:
+- Backend: `backend/migrations/20260506000001_create_expense_type.js` + add-on migration
+- Frontend: `_seedExpenseTypes()` ใน `app_database.dart`
+
+## 4. ทะเบียนคุม 10 ประเภท (Register Tabs)
+
+UI: `forntend/lib/features/register/presentation/pages/register_page.dart` มี 10 tabs
+
+| # | Tab | คู่มือหน้า | DB หลัก |
+|---|---|---|---|
+| 1 | เงินนอกงบประมาณ (13 หมวด) | 40-41 | income/income_sub + expense/expense_sub join `refIncomeType` |
+| 2 | หลักฐานขอเบิก | 38 | expense_req |
+| 3 | ใบสำคัญคู่จ่าย | 37 | expense |
+| 4 | จ่ายเช็ค | 39 | pay_cheque + cheque_account |
+| 5 | สัญญายืมเงิน | 45 | loan + repay_loan |
+| 6 | ใบเสร็จรับเงิน | 35 | receipt_book + receipt_issue |
+| 7 | เงินประกันสัญญา/ภาษีหัก ณ ที่จ่าย | 42 | deposit_guarantee |
+| 8 | เงินฝากธนาคาร (กระแสรายวัน) | 36 | cheque_account + income/expense join bank pocket |
+| 9 | สมุดคู่ฝาก (ส่วนราชการผู้เบิก) | 43 | income/expense pocket = agency |
+| 10 | รับและนำส่งรายได้แผ่นดิน | 44 | income/expense join `moneygroup = เงินรายได้แผ่นดิน` |
+
+> Tab 8-10 เพิ่มเข้ามาเพื่อให้ครบตามภาคผนวกคู่มือ — Tab 1-7 มีอยู่แล้วก่อนหน้า
+
+## 5. รายงานหลัก (Reports)
+
+| รายงาน | คู่มือหน้า | endpoint |
+|---|---|---|
+| รายงานรับ-จ่ายประจำปี | **33** (เคยเขียนผิดเป็น 30) | `GET /api/reports/annual-summary?fiscal_year=` |
+| งบเทียบยอดเงินฝากธนาคาร | 32 | `GET /api/reports/bank-reconciliation?date=` |
+| รายงานเงินคงเหลือประจำวัน | 34 | `GET /api/reports/daily-balance?date=` |
+
+งบเทียบยอดธนาคาร: อ่าน movement ผ่าน view `v_report_income_bank_movement` / `v_report_expense_bank_movement` (คอลัมน์ `effective_refbankaccount` = COALESCE หัวเอกสาร, แหล่งเงิน, legacy incometype) — ดู `backend/migrations/20260516000003_create_reporting_bank_resolution_views.js`
+
+Daily balance (หน้า 34) ต้องแสดง 7 แถว: เงินงบประมาณ / เงินรายได้แผ่นดิน (-ดอกเบี้ยอุดหนุน) / เงินนอกงบประมาณ / เงินอุดหนุนทั่วไป (-รายหัว, -ปัจจัยพื้นฐาน) / เงินรายได้สถานศึกษา (-บริจาค, -อื่น) / เงินภาษีหัก ณ ที่จ่าย / เงินประกันสัญญา + คอลัมน์ เงินสด / เงินฝากธนาคาร / เงินฝากส่วนราชการผู้เบิก / รวม / หมายเหตุ
+
+## 6. วงเงินเก็บรักษา (cash_keeping_limit)
+
+อ้างอิงคู่มือหน้า 8-9. ตาราง `cash_keeping_limit` มีคอลัมน์ `fund_kind` × `school_size` (small/big):
+
+| fund_kind | small (≤120 คน) | big (>120 คน) | คู่มือ |
+|---|---|---|---|
+| `school_revenue` (เงินรายได้สถานศึกษา) | สด 20K / ฝาก 30K | สด 30K / ฝาก 1M | หน้า 9 ตาราง 1 |
+| `lunch` (เงินอุดหนุนอาหารกลางวัน) | สด 50K / ฝาก 200K | สด 50K / ฝาก 200K | หน้า 9 ตาราง 2 |
+| `kosor` (เงิน กสศ.) | สด 20K / ฝาก 30K | สด 20K / ฝาก 30K | (เกณฑ์ภายใน — คู่มือไม่ระบุชัดเจน) |
+| `general` | สด 20K / ฝาก 30K | สด 30K / ฝาก 1M | (alias ของ school_revenue — เก็บไว้เพื่อ backward-compat) |
+
+หมายเหตุเพิ่ม (หน้า 9 บรรทัดท้ายตาราง 1):
+> สถานศึกษาที่จัดอาหารกลางวัน (ที่มิได้จากเงินงบประมาณ) ให้กับนักเรียน มีเงินสดสำรองไว้ ณ ที่ทำการเพิ่มอีกวันละไม่เกิน **20,000 บาท**
+
+## 7. วิธีจำแนก "pocket" (เงินสด / ธนาคาร / ส่วนราชการผู้เบิก)
+
+อิง `money_type.name` แล้วแมปด้วย `classifyPocket()`:
+- `เงินสด`, `cash` → POCKET_CASH
+- `โอน`, `ฝากธนาคาร`, `bank`, `transfer`, `เช็ค`, `cheque` → POCKET_BANK
+- `ส่วนราชการ`, `agency` → POCKET_AGENCY
+
+Seed source: `backend/data/seeds/seeds06_monneytypeData.js` + `_seedInitialData` ใน `app_database.dart`
+
+## 8. กฎสำคัญที่ห้ามผิด
+
+1. ห้ามลบ/เปลี่ยน id ของ `moneygroup` 5 รายการ (1=รายได้แผ่นดิน, 2=นอกงบฯ, 3=ภาษีหัก, 4=ประกันสัญญา, 5=งบประมาณ) เพราะ backend seed ใช้ AUTO_INCREMENT id ตรงเป๊ะ
+2. ห้ามลบ OB-01..OB-13 — ใช้ `INSERT OR IGNORE` พร้อม `code` เป็น natural key
+3. ห้ามแก้คอลัมน์ของ `cash_keeping_limit` โดยไม่อัปเดตทั้ง backend migration `20260506000005` + frontend `_createCashKeepingLimitTable` + `_seedCashKeepingLimitRows`
+4. ห้ามตั้ง `expense_type.code` ซ้ำ — ใช้ '00'..'08' (รวม 9 ประเภท)
+5. การแสดงผลในรายงานประจำปี (หน้า 33) ต้องจัดกลุ่ม code 01-04 → "งบดำเนินงาน", 05-06 → "งบลงทุน", 07 → "งบเงินอุดหนุน", 00 → "งบบุคลากร", 08 → "อื่น ๆ"
+6. รายงาน daily balance (หน้า 34) ต้องแบ่ง 7 แถวตามที่ระบุใน §5
+7. แก้ schema ใด ๆ ที่กระทบ SQLite ต้อง bump `dbVersion` ใน `app_database.dart` + เพิ่ม block migration ใน `_onUpgrade`
+
+## 9. Path quick-reference
+
+```
+backend/
+├── migrations/
+│   ├── 20231104100022_create_money_group.js
+│   ├── 20231104100023_create_income_type.js
+│   ├── 20260506000001_create_expense_type.js
+│   ├── 20260506000001_seed_offbudget_categories.js
+│   ├── 20260506000005_alter_school_profile_keep_limits.js   (cash_keeping_limit)
+│   ├── 20260506000004_create_receipt_book.js
+│   ├── 20260506000003_create_deposit_guarantee.js
+│   ├── 20260506000002_create_appointment_order.js
+│   ├── 20260516000002_alter_incometype_refbankaccount_nullable.js
+│   └── 20260516000003_create_reporting_bank_resolution_views.js
+├── data/seeds/seeds07_moneygroupData.js
+├── src/sacc_register/services/
+│   ├── offbudget_register.service.js   (page 40-41)
+│   └── generic_register.service.js     (page 35, 37, 38, 39, 45)
+├── src/sacc_reports/services/extra_reports.service.js  (page 32, 33, 34)
+└── src/routes/reports.route.js
+
+forntend/
+├── lib/core/local_data_source/app_database.dart
+│   ├── _seedIncomeTypes()           (OB-01..OB-13)
+│   ├── _seedExpenseTypes()           (00..08)
+│   ├── _seedMoneyGroups()            (5 rows)
+│   ├── _seedOffBudgetCategoryRows() (mirror ของ income_type)
+│   └── _seedCashKeepingLimitRows()   (วงเงินเก็บรักษา)
+├── lib/features/register/presentation/
+│   ├── pages/register_page.dart      (10 tabs)
+│   └── widgets/*_register_tab.dart
+└── lib/constants/transaction_ui_text.dart   (registerXxxTabLabel, incomeTypeBudgetLink* ข้อความผูกแหล่งเงินตามคู่มือ)
+```

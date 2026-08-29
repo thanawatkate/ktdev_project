@@ -1,0 +1,50 @@
+# Flutter build and generated files
+/forntend/build/
+/forntend/.dart_tool/
+/forntend/.flutter-plugins-dependencies
+/forntend/.flutter-plugins
+/forntend/dart_tools/
+/forntend/android/key.properties
+/forntend/android/*.jks
+/forntend/android/*.keystore
+
+# Environment files (allow commit except production)
+.env.production
+**/.env.production
+
+# Local databases and cache
+/forntend/**/*.db
+/forntend/**/*.db-shm
+/forntend/**/*.db-wal
+/forntend/.cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+/backend/node_modules/
+/registry-backend/node_modules/
+/backend/dist/
+/registry-backend/dist/
+/release/out/
+/release/windows/redist/vc_redist.x64.exe
+/release/docker/.env.production
+/release/docker/init/*.generated.sql
+/release/local-production/
+/release/backups/
+/release/symbols/
+
+# Build artifacts
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe

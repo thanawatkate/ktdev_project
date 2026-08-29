@@ -1,0 +1,44 @@
+---
+description: Registry, License และการแจกจ่าย SACCM — อ้างอิงเมื่อแก้ registry-backend, activation, trial, build dart-define
+alwaysApply: false
+---
+
+# Registry & License (SACCM)
+
+เอกสาร canonical (HTML): **`docs/registry-and-license.html`**  
+กฎทีม: **`TEAM_RULES.md` §14**
+
+## สรุปสถาปัตยกรรม
+
+| บริการ | Path | พอร์ต | หน้าที่ |
+|--------|------|-------|---------|
+| Registry | `registry-backend/` | 3802 | license, keygen, activate, trial, device log |
+| Online API | `backend/` | 3801 | ข้อมูลการเงิน, sync — **ไม่มี** license |
+| Trial ฝัง | `forntend/.../embedded_trial_license.dart` | — | 90 วันบนเครื่อง ไม่ผ่าน Registry |
+
+## Flutter → Registry
+
+- Client: `forntend/lib/features/license/data/datasources/license_remote_data_source.dart`
+- Base URL: `registryBase` จาก `SACC_REGISTRY_BASE` (`forntend/lib/config.dart`) — **compile-time เท่านั้น** ไม่เปลี่ยนจาก Settings
+- Online API ใช้ `SACC_API_BASE` / `baseurl` แยกต่างหาก
+
+## หลัง activate (online)
+
+- `MasterDataSyncService.run()` เรียก **Online API** ไม่ใช่ Registry
+- Gate: `LicenseMode.canSyncOnline()` + มีเน็ต
+- Master: `BackupFullMirrorSync.runMastersOnly` + `menu/rows` ด้วย JWT
+
+## Build Windows
+
+```powershell
+pwsh forntend\tool\build_windows_protected.ps1 -RegistryBase "https://host/registryapi/"
+# หรือ release\scripts\build-release.ps1 -RegistryBase ...
+```
+
+## ห้าม
+
+- เก็บรหัส license / รายการเครื่องใน `backend` (ใช้ `school_tenant` อย่างเดียว)
+- ใช้ DB เดียวกันระหว่าง `registry-backend` กับ Online API
+- ให้ UI อ่านธุรกรรมจาก Registry หรือ bypass §4.2.3 ด้วย JWT อย่างเดียว
+
+เมื่อแก้ flow นี้ อัปเดต `docs/registry-and-license.html` และ `TEAM_RULES.md` §14 ด้วย
