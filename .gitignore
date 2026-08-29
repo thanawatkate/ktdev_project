@@ -1,4 +1,4 @@
-# Local clones no longer registered in .gitmodules — keep on disk, do not track.
+# Commented out of .gitmodules — not tracked. Re-clone if you uncomment.
 /SimTally/
 /cookie-banner/
 /ktdevelop_web/

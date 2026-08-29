@@ -99,7 +99,7 @@ is_registered() {
   return 1
 }
 
-# Unregister a gitlink that is no longer in .gitmodules. Keep the working tree.
+# Unregister a gitlink that is no longer in .gitmodules, then delete the folder.
 unregister_stale_gitlink() {
   local dir="$1"
   if [[ -e "$dir/.git" ]] && repo_is_mid_operation "$dir"; then
@@ -107,21 +107,21 @@ unregister_stale_gitlink() {
     return 1
   fi
   if [[ -e "$dir/.git" ]] && submodule_is_dirty "$dir"; then
-    echo "  [WARN] '$dir' has uncommitted changes — backing up before unregister."
+    echo "  [WARN] '$dir' has uncommitted changes — backing up before removal."
     backup_submodule "$dir"
   fi
-  echo "  -> Unregistering gitlink '$dir' (folder kept)"
-  # git rm --cached requires a staged .gitmodules when that file is dirty
+  echo "  -> Removing '$dir' (no longer in .gitmodules)"
   git add .gitmodules 2>/dev/null || true
   git submodule deinit -f "$dir" 2>/dev/null || true
   git rm --cached -f "$dir" 2>/dev/null || true
   git config --remove-section "submodule.$dir" 2>/dev/null || true
+  rm -rf "$dir" "$ROOT_DIR/.git/modules/$dir"
 }
 
-# ── step 1: unregister gitlinks no longer listed in .gitmodules ───────────────
-# Commented-out entries in .gitmodules are ignored. Do NOT delete working trees.
+# ── step 1: remove paths no longer listed in .gitmodules ──────────────────────
+# Commented-out entries are ignored. Working trees are deleted (dirty ones are backed up first).
 
-echo "==> Unregistering paths that are no longer in .gitmodules..."
+echo "==> Removing paths that are no longer in .gitmodules..."
 stale_removed=false
 declare -A SEEN_STALE=()
 
@@ -134,7 +134,10 @@ for dir_slash in */; do
   fi
   in_index=0
   git ls-files --error-unmatch -- "$dir" &>/dev/null && in_index=1 || true
-  if ! is_registered "$dir" && { [[ "$is_gitlink" -gt 0 ]] || [[ "$in_index" -eq 1 && -e "$dir/.git" ]]; }; then
+  if is_registered "$dir"; then
+    continue
+  fi
+  if [[ "$is_gitlink" -gt 0 ]] || [[ "$in_index" -eq 1 ]] || [[ -e "$dir/.git" ]]; then
     unregister_stale_gitlink "$dir"
     SEEN_STALE["$dir"]=1
     stale_removed=true
@@ -189,15 +192,38 @@ done
 # ── step 4: init new submodules ───────────────────────────────────────────────
 
 echo "==> Initializing new submodules (skip existing)..."
-git submodule update --init --recursive --no-fetch 2>/dev/null || \
-  git submodule update --init --recursive
+if ! git submodule update --init --recursive --no-fetch 2>/dev/null; then
+  git submodule update --init --recursive || echo "[WARN] submodule update --init failed (network?)"
+fi
 
 # ── step 5: pull latest (preserving local changes) ────────────────────────────
-# NOTE: Uses POSIX sh syntax only — git submodule foreach runs via /bin/sh (dash).
-# Do NOT use [[ ]], bash arrays, or other bash-specific syntax here.
 
 echo "==> Pulling latest on each submodule's default branch (preserving local changes)..."
 # Loop paths from .gitmodules only — git submodule foreach also walks leftover index gitlinks.
+
+restore_stash() {
+  local path="$1"
+  local name="$2"
+  if [[ "${3:-}" == true ]]; then
+    echo "  -> $name: restoring local changes..."
+    git -C "$path" stash pop || echo "  [WARN] $name: stash pop failed — run: git stash pop in $path"
+  fi
+}
+
+fetch_origin() {
+  local path="$1"
+  local tries=3
+  local i
+  for i in $(seq 1 "$tries"); do
+    if git -C "$path" fetch origin; then
+      return 0
+    fi
+    echo "  [WARN] $path: fetch failed ($i/$tries) — retrying..."
+    sleep "$i"
+  done
+  return 1
+}
+
 pull_registered_submodule() {
   local path="$1"
   local name="$path"
@@ -233,29 +259,27 @@ pull_registered_submodule() {
     fi
   fi
 
-  git -C "$path" fetch origin
+  if ! fetch_origin "$path"; then
+    echo "  [ERROR] $name: cannot reach origin (DNS/network/SSH) — skipping"
+    restore_stash "$path" "$name" "$stashed"
+    return 0
+  fi
 
   local current_branch
   current_branch=$(git -C "$path" symbolic-ref --short HEAD 2>/dev/null || echo "DETACHED")
   if [[ "$current_branch" == "DETACHED" ]]; then
-    git -C "$path" fetch origin "$default_branch" && \
-      git -C "$path" merge --ff-only "origin/$default_branch" 2>/dev/null || \
+    git -C "$path" merge --ff-only "origin/$default_branch" 2>/dev/null || \
       echo "  [WARN] $name: cannot fast-forward detached HEAD — manual merge required."
   else
     if ! git -C "$path" pull --rebase origin "$current_branch" 2>/dev/null; then
       echo "  [ERROR] $name: pull --rebase failed. Aborting rebase and restoring stash."
       git -C "$path" rebase --abort 2>/dev/null || true
-      if [[ "$stashed" == true ]]; then
-        git -C "$path" stash pop || echo "  [WARN] $name: stash pop failed — run: git stash pop in $path"
-      fi
+      restore_stash "$path" "$name" "$stashed"
       return 0
     fi
   fi
 
-  if [[ "$stashed" == true ]]; then
-    echo "  -> $name: restoring local changes..."
-    git -C "$path" stash pop || echo "  [WARN] $name: stash pop had conflicts — resolve manually then run: git stash drop"
-  fi
+  restore_stash "$path" "$name" "$stashed"
 }
 
 for path in "${SUBMODULE_PATHS[@]+"${SUBMODULE_PATHS[@]}"}"; do
